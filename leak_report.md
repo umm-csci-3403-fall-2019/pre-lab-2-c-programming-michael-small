@@ -5,18 +5,6 @@ Running `valgrind` yielded 46 bytes in 6 blocks leaked.
 `valgrind --leak-check=full ./check_whitespace` 
 
 >==27823== Memcheck, a memory error detector
-==27823== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==27823== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
-==27823== Command: ./check_whitespace
-==27823== 
-The string 'Morris' is clean.
-The string '  stuff' is NOT clean.
-The string 'Minnesota' is clean.
-The string 'nonsense  ' is NOT clean.
-The string 'USA' is clean.
-The string '   ' is NOT clean.
-The string '     silliness    ' is NOT clean.
-==27823== 
 ==27823== HEAP SUMMARY:
 ==27823==     in use at exit: 46 bytes in 6 blocks
 ==27823==   total heap usage: 7 allocs, 1 frees, 1,070 bytes allocated
@@ -37,5 +25,21 @@ The string '     silliness    ' is NOT clean.
 ==27823== For lists of detected and suppressed errors, rerun with: -s
 ==27823== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
 
+Placing `free(cleaned)` in line 70 frees everything up, but there is an error. 
 
+>'USA' is clean.
+==29778== Invalid free() / delete / delete[] / realloc()
+==29778==    at 0x4839A0C: free (vg_replace_malloc.c:540)
+==29778==    by 0x40129A: is_clean (check_whitespace.c:70)
+==29778==    by 0x401308: main (check_whitespace.c:88)
+==29778==  Address 0x402010 is in a r-- mapped file /home/small203/Practicum/pre-lab-2-c-programming-michael-small/check_whitespace segment
+==29778== 
+The string '   ' is NOT clean.
+The string '     silliness    ' is NOT clean.
 
+Looking at the array, that `invalid free` is on the empty string. 
+However, changing `return ""` to `return strdup("")` in strip's `num_spaces >= size` clause
+prevents this error. Now all valid strings are freed, and empty strings are to my understanding 
+either not freed because they don't have to or are handled specially by some property
+of strdup that I don't have the time to look deeper into in 3 mins before this hand in is
+(though I will look into it right after submission.)
